@@ -17,10 +17,11 @@ app.use(bodyParser.json());
 
 // handle creation of new todos
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo({
     // fetch todos text from request body
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   // Save todo
@@ -38,10 +39,12 @@ app.post('/todos', (req, res) => {
 
 // Get all todos from database
 
-app.get("/todos", (req, res) => {
+app.get("/todos", authenticate, (req, res) => {
 
   // finds all todos
-  Todo.find().then((todos)=>{
+  Todo.find({
+    _creator: req.user._id
+  }).then((todos)=>{
     // sends all found todos back
     res.send({todos});
   }, (e)=>{
@@ -52,7 +55,7 @@ app.get("/todos", (req, res) => {
 
 // Gets an individual todo
 
-app.get("/todos/:id", (req, res) => {
+app.get("/todos/:id", authenticate, (req, res) => {
 
   // gets id of todo 
   var id = req.params.id;
@@ -63,7 +66,10 @@ app.get("/todos/:id", (req, res) => {
   }
 
   // Finds todo with that specific id
-  Todo.findById(id).then((todo) => {
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
 
     // check if return value is actual doc
     if (!todo){
@@ -80,7 +86,7 @@ app.get("/todos/:id", (req, res) => {
 
 // Delete specific todo
 
-app.delete("/todos/:id", (req, res) => {
+app.delete("/todos/:id", authenticate, (req, res) => {
 
   // get todos ID
   var id = req.params.id;
@@ -91,7 +97,10 @@ app.delete("/todos/:id", (req, res) => {
   }
 
   // removes doc by id
-  Todo.findByIdAndRemove(id).then((s) => {
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.params.id
+  }).then((s) => {
 
     // if nothing is removed or doc doesnt exist
     if (!s){
@@ -113,7 +122,7 @@ app.delete("/todos/:id", (req, res) => {
 
 // Update doc.
 
-app.patch("/todos/:id", (req, res) => {
+app.patch("/todos/:id", authenticate, (req, res) => {
   // fetch id
   var id = req.params.id;
 
@@ -137,7 +146,10 @@ app.patch("/todos/:id", (req, res) => {
   }
 
   // does actual updating
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+  Todo.findOneAndUpdate({
+    _id: id,
+    _creator: req.body.id
+  }, {$set: body}, {new: true}).then((todo) => {
     
     // if no such doc
     if (!todo){
