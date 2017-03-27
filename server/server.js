@@ -1,8 +1,11 @@
+require("./config/config");
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require("lodash");
 const bcrypt = require("bcryptjs");
 const {ObjectID} = require("mongodb");
+const helmet = require("helmet");
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -12,6 +15,9 @@ var {authenticate} = require("./middleware/authenticate");
 const PORT = process.env.PORT || 3000;
 
 var app = express();
+
+app.use(helmet());
+app.use(helmet.hidePoweredBy({ setTo: 'PHP 4.7.6' }));
 
 app.use(bodyParser.json());
 
